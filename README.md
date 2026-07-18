@@ -388,7 +388,9 @@ The Uninstall results confirmed that Speedify VPN had not only been downloaded b
 I opened the **Users Info** category to identify accounts found in the drive image.
 
 <p align="center">
-  <img width="900" alt="List of Windows user accounts identified by E3" src="PASTE-E3-USERS-LIST-IMAGE-URL-HERE" />
+  <img src="https://github.com/user-attachments/assets/99bed914-bed2-4e77-a10b-594c72130529"
+       alt="Paraben's E3 forensic evidence analysis"
+       width="800">
 </p>
 
 <p align="center"><em>Figure 16: Windows user accounts identified in the Beverly Gates evidence image.</em></p>
@@ -398,10 +400,11 @@ I opened the **Users Info** category to identify accounts found in the drive ima
 I opened the Beverly Gates user record and reviewed the `Run` folder. This folder contained applications configured to start automatically when the user logged on.
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/99bed914-bed2-4e77-a10b-594c72130529"
+  <img src="https://github.com/user-attachments/assets/6ed2a0fc-2d83-4b7a-9ef0-2147248a4ddc"
        alt="Paraben's E3 forensic evidence analysis"
        width="800">
 </p>
+
 
 <p align="center"><em>Figure 17: Startup applications found in the Beverly Gates `Run` Registry folder.</em></p>
 
@@ -419,7 +422,7 @@ Data Triage
 The History records contained suspicious browsing activity relevant to the investigation.
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/6ed2a0fc-2d83-4b7a-9ef0-2147248a4ddc"
+  <img src="https://github.com/user-attachments/assets/fb72bca1-04ac-4f7a-9ef2-6984297b76d9"
        alt="Paraben's E3 forensic evidence analysis"
        width="800">
 </p>
@@ -431,18 +434,13 @@ The History records contained suspicious browsing activity relevant to the inves
 I reviewed the **Keywords** sub-node and identified search terms associated with the suspected activity.
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/fb72bca1-04ac-4f7a-9ef2-6984297b76d9"
+  <img src="https://github.com/user-attachments/assets/f2f1e60d-ea1d-4b82-b270-279aa1305687"
        alt="Paraben's E3 forensic evidence analysis"
        width="800">
 </p>
 
 <p align="center"><em>Figure 19: Suspicious search keyword recovered from browser artifacts.</em></p>
 
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/f2f1e60d-ea1d-4b82-b270-279aa1305687"
-       alt="Paraben's E3 forensic evidence analysis"
-       width="800">
-</p>
 
 ---
 
