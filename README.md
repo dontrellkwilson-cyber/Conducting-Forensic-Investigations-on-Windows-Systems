@@ -465,7 +465,9 @@ I enabled the **Whole word** option and searched for terms commonly associated w
 The search identified a suspicious file containing addresses relevant to the investigation.
 
 <p align="center">
-  <img width="900" alt="Suspicious file containing addresses located through E3 Advanced Search" src="PASTE-ADVANCED-SEARCH-SUSPICIOUS-FILE-IMAGE-URL-HERE" />
+  <img src="https://github.com/user-attachments/assets/f9832c15-09d2-4f85-ba00-4737b09fcaec"
+       alt="Paraben's E3 forensic evidence analysis"
+       width="800">
 </p>
 
 <p align="center"><em>Figure 20: Suspicious file containing addresses located with E3 Advanced Search.</em></p>
@@ -495,7 +497,9 @@ Tor
 The results included Registry evidence connecting Tor-related activity with Firefox, indicating that Tor had been used or configured as a Firefox extension.
 
 <p align="center">
-  <img width="900" alt="Registry key showing information associated with Tor and Firefox" src="PASTE-TOR-FIREFOX-REGISTRY-IMAGE-URL-HERE" />
+  <img src="https://github.com/user-attachments/assets/a4f6d882-2754-40ea-b1fb-f7d9cdabfb02"
+       alt="Paraben's E3 forensic evidence analysis"
+       width="800">
 </p>
 
 <p align="center"><em>Figure 21: Registry evidence associating Tor-related activity with Firefox.</em></p>
