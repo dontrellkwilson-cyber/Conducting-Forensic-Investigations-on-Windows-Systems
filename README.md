@@ -10,7 +10,7 @@
 
 The objective of this lab was to collect and analyze forensic evidence from both a live Windows system and a Windows drive image.
 
-The investigation included examining running processes, listening network ports, NTFS volume information, the USN change journal, Windows Registry artifacts, shortcut files, installed applications, browser activity, and files that may have been intentionally concealed.
+The investigation included examining running processes, network listening ports, NTFS volume information, the USN change journal, Windows Registry artifacts, shortcut files, installed applications, browser activity, and files that may have been intentionally concealed.
 
 ## Skills Demonstrated
 
@@ -21,7 +21,7 @@ The investigation included examining running processes, listening network ports,
 - USN change journal examination
 - File identification through NTFS file IDs
 - Windows Registry analysis with Registry Editor
-- Windows installation timestamp conversion
+- Windows installation timestamp interpretation
 - Network-interface Registry analysis
 - Winlogon, ShellBag, and RecentDocs examination
 - Windows drive-image analysis with Paraben E3
@@ -52,22 +52,22 @@ The investigation included examining running processes, listening network ports,
 | **Fsutil** | Examined NTFS volume data, the USN journal, and file IDs |
 | **Registry Editor** | Examined Windows installation, interface, login, ShellBag, and RecentDocs artifacts |
 | **Paraben E3** | Imported and analyzed the Windows evidence image |
-| **Epoch Converter** | Converted the Windows installation timestamp into a readable date |
+| **Epoch Converter** | Converted the Windows `InstallDate` Unix timestamp into a readable date and time |
 | **Command Prompt** | Executed NTFS and USN journal commands |
 
 ## Investigation Scenario
 
 In this lab, I first performed live analysis on a Windows Server 2019 system. I gathered information about active processes, network activity, the NTFS file system, and Registry artifacts.
 
-I then examined a forensic image of Beverly Gates's Windows laptop. Beverly Gates, the HR manager at Intricate Solutions, was suspected of participating in a drug-trafficking operation with connections to the Russian mafia. The drive image was analyzed for concealed files, suspicious applications, Registry evidence, shortcut files, browser records, and other indicators of unauthorized activity.
+I then examined a forensic image of Beverly Gates's Windows laptop. Beverly Gates, the HR manager at Intricate Solutions, was suspected of participating in a drug-trafficking operation with connections to the Russian mafia. The drive image was analyzed for concealed files, potentially relevant applications, Registry evidence, shortcut files, browser records, and other artifacts related to the investigation.
 
 ---
 
-# Section 1: Hands-On Demonstration
+## Section 1: Hands-On Demonstration
 
-## Part 1: Gather Basic System Information
+### Part 1: Gather Basic System Information
 
-### Examining Running Processes
+#### Examining Running Processes
 
 I opened Task Manager and enabled the **Command line** column. This displayed the executable path and launch arguments associated with each running process.
 
@@ -75,25 +75,25 @@ I selected a core Windows process and opened its Properties window to document d
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/55bb1db1-f6a7-4c6d-b498-cc2d7b8bdb9e"
-       alt="FTK Imager forensic evidence verification"
+       alt="Task Manager process properties showing executable details for a core Windows process"
        width="450">
 </p>
 
 <p align="center"><em>Figure 1: Properties for a core Windows process selected during live system analysis.</em></p>
 
-### Reviewing Listening Ports
+#### Reviewing Listening Ports
 
 I opened Resource Monitor, selected the **Network** tab, and expanded **Listening Ports**. This view displayed the processes, process IDs, local addresses, ports, protocols, and firewall status associated with active listeners.
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/091bec50-f1bf-415f-8cab-005b13385046"
-       alt="FTK Imager forensic evidence verification"
+       alt="Windows Resource Monitor showing active listening ports and associated processes"
        width="800">
 </p>
 
 <p align="center"><em>Figure 2: Active listening ports and their associated Windows processes.</em></p>
 
-### Examining the NTFS Volume
+#### Examining the NTFS Volume
 
 I used the following command to display NTFS information for the system drive:
 
@@ -105,13 +105,13 @@ The results included the NTFS version, volume serial number, sector and cluster 
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/560e0b30-7a03-4947-8be4-128a936d25f8"
-       alt="FTK Imager forensic evidence verification"
+       alt="Command Prompt displaying NTFS volume information for the C drive"
        width="800">
 </p>
 
 <p align="center"><em>Figure 3: NTFS volume information collected from the `C:` drive.</em></p>
 
-### Examining the USN Change Journal
+#### Examining the USN Change Journal
 
 I queried the USN change journal with:
 
@@ -119,11 +119,11 @@ I queried the USN change journal with:
 fsutil usn queryjournal C:
 ```
 
-The USN journal records file-system changes such as file creation, deletion, and modification.
+The USN journal records metadata about file-system changes such as file creation, deletion, and modification. It is useful for timeline reconstruction but should not be treated as a complete audit log.
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/5a6ff321-7432-46f0-af61-0c4f3c27dfc6"
-       alt="FTK Imager forensic evidence verification"
+       alt="Command Prompt displaying USN change journal information for the C drive"
        width="800">
 </p>
 
@@ -138,11 +138,11 @@ fsutil usn readjournal C:
 To create a searchable CSV copy of the journal, I used:
 
 ```cmd
-cd Desktop
+cd /d "%USERPROFILE%\Desktop"
 fsutil usn readjournal C: csv > usn.log
 ```
 
-### Locating a File Through Its NTFS File ID
+#### Locating a File Through Its NTFS File ID
 
 I created a text file named:
 
@@ -153,12 +153,12 @@ Dontrell Wilson.txt
 After locating its record in `usn.log`, I copied the NTFS file ID and queried its path with:
 
 ```cmd
- fsutil file queryFileNameById C:\ 0x0000000000000000000a00000001c2e2
+fsutil file queryFileNameById C:\ 0x0000000000000000000a00000001c2e2
 ```
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/05168a6b-8d93-4cff-8a44-a4d4fdd440b1"
-       alt="FTK Imager forensic evidence verification"
+       alt="Command Prompt showing the file path returned from an NTFS file ID query"
        width="800">
 </p>
 
@@ -166,9 +166,9 @@ After locating its record in `usn.log`, I copied the NTFS file ID and queried it
 
 ---
 
-## Part 2: Explore the Windows Registry
+### Part 2: Explore the Windows Registry
 
-### Windows Installation Information
+#### Windows Installation Information
 
 I opened Registry Editor and navigated to:
 
@@ -178,35 +178,35 @@ HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion
 
 The `CurrentVersion` key contained operating-system information such as the Windows edition, build, installation type, registered owner, and installation timestamp.
 
-I copied the hexadecimal `InstallDate` value and converted it into a human-readable date.
+I recorded the `InstallDate` DWORD value and converted its Unix timestamp into a human-readable date and time.
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/72de9f42-33a8-41ec-be7e-a6ec42578a01"
-       alt="FTK Imager forensic evidence verification"
+       alt="Registry Editor and timestamp conversion showing Windows installation information"
        width="800">
 </p>
 
-<p align="center"><em>Figure 6: Windows installation timestamp converted from hexadecimal to a readable date.</em></p>
+<p align="center"><em>Figure 6: Windows `InstallDate` Unix timestamp converted to a readable date and time.</em></p>
 
-### Default Network Interface
+#### Network Interface Registry Data
 
-I examined the Registry key for the default network interface:
+I examined the Registry key associated with the active network interface:
 
 ```text
 HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\{39007c8a-d2a1-4c34-bb9d-e9c1bce829b3}
 ```
 
-The values included network configuration information such as the assigned IP address, DHCP details, and default gateway.
+The values included network configuration information such as DHCP-assigned addressing details and the default gateway. The interface GUID should be correlated with the active adapter before attributing the values to a specific network connection.
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/b5ea7028-7ffd-42df-94cf-4b273e2380c3"
-       alt="FTK Imager forensic evidence verification"
+       alt="Registry Editor showing DHCP and gateway values for the active network interface"
        width="800">
 </p>
 
-<p align="center"><em>Figure 7: Registry values associated with the default network interface.</em></p>
+<p align="center"><em>Figure 7: Registry values associated with the active network interface.</em></p>
 
-### Winlogon Registry Key
+#### Winlogon Registry Key
 
 I navigated to:
 
@@ -214,17 +214,17 @@ I navigated to:
 HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon
 ```
 
-The Winlogon key stores information related to user logon behavior, profile loading, and the Windows shell.
+The Winlogon key stores configuration related to Windows logon behavior, shell initialization, and user-session startup.
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/9a88b2a6-bece-4560-a5bb-1c5e6eb1172e"
-       alt="FTK Imager forensic evidence verification"
+       alt="Registry Editor showing values in the Windows Winlogon key"
        width="800">
 </p>
 
 <p align="center"><em>Figure 8: Values stored in the Windows Winlogon Registry key.</em></p>
 
-### ShellBag Artifacts
+#### ShellBag Artifacts
 
 I navigated to:
 
@@ -232,17 +232,17 @@ I navigated to:
 HKEY_CURRENT_USER\Software\Microsoft\Windows\Shell\Bags
 ```
 
-ShellBag artifacts can show that a user accessed a folder, including folders that may no longer exist on the system.
+ShellBag artifacts can indicate that a user viewed or interacted with a folder through Windows Explorer, including folders that may no longer exist on the system.
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/30aead73-39b1-47b5-8771-4f814e1b62de"
-       alt="FTK Imager forensic evidence verification"
+       alt="Registry Editor showing ShellBag entries associated with folder-view activity"
        width="800">
 </p>
 
-<p align="center"><em>Figure 9: ShellBag values documenting folders accessed by the current user.</em></p>
+<p align="center"><em>Figure 9: ShellBag values indicating folder-view activity by the current user.</em></p>
 
-### RecentDocs Artifacts
+#### RecentDocs Artifacts
 
 I examined:
 
@@ -250,11 +250,11 @@ I examined:
 HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\RecentDocs
 ```
 
-The RecentDocs key contained records associated with files recently accessed through File Explorer.
+The RecentDocs key contained records associated with files recently opened or accessed through Windows shell activity.
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/173a79af-f6af-42c7-94c4-9263157afbfb"
-       alt="FTK Imager forensic evidence verification"
+       alt="Registry Editor showing RecentDocs artifacts associated with recently opened files"
        width="800">
 </p>
 
@@ -262,9 +262,9 @@ The RecentDocs key contained records associated with files recently accessed thr
 
 ---
 
-# Section 2: Applied Learning
+## Section 2: Applied Learning
 
-## Part 1: Create and Sort a New E3 Case
+### Part 1: Create and Sort a New E3 Case
 
 I created an E3 case named:
 
@@ -278,15 +278,15 @@ I then imported the first segment of the Windows forensic image:
 C:\Beverly Gates Evidence\BG_evidence.001
 ```
 
-After the image was added, I ran E3 Content Analysis to categorize the files and artifacts found on the drive.
+After the image was added, I ran E3 Content Analysis to categorize files and artifacts found in the drive image.
 
-### Sorted Files
+#### Sorted Files
 
 E3 organized the analyzed evidence into categories such as archives, documents, images, applications, and other file types.
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/22711403-f8e0-45a4-b3f0-f62a6e5e7d6a"
-       alt="FTK Imager forensic evidence verification"
+       alt="Paraben E3 showing files categorized after Content Analysis"
        width="800">
 </p>
 
@@ -294,29 +294,29 @@ E3 organized the analyzed evidence into categories such as archives, documents, 
 
 ---
 
-## Part 2: Perform Forensic Analysis on the Windows Drive Image
+### Part 2: Perform Forensic Analysis on the Windows Drive Image
 
-### Detecting an Extension Mismatch
+#### Detecting an Extension Mismatch
 
 I searched the sorted files for `.jpg` files with mismatched extensions. The query identified `777.jpg` as a file whose actual content did not match its displayed extension.
 
-The file was located in:
+The file was located at:
 
 ```text
 Root\Users\BeverlyGates\AppData\Local\VirtualStore
 ```
 
-Although the file used a `.jpg` extension, E3 identified it as a compressed package. The Document View showed that it was actually an Excel spreadsheet containing customer names, amounts owed, and drug-related information.
+Although the file used a `.jpg` extension, E3 identified its underlying content as a compressed package. Further examination showed that it was an Excel workbook containing customer names, amounts owed, and drug-related information.
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/281b8f40-b012-4c39-8f08-e8665d1fcae9"
-       alt="Paraben's E3 forensic evidence analysis"
+       alt="Paraben E3 displaying the disguised 777.jpg file as an Excel workbook"
        width="800">
 </p>
 
-<p align="center"><em>Figure 12: The disguised `777.jpg` file displayed as an incriminating spreadsheet in E3.</em></p>
+<p align="center"><em>Figure 12: The disguised `777.jpg` file displayed as an investigatively relevant Excel workbook in E3.</em></p>
 
-### Analyzing the 777.lnk Shortcut
+#### Analyzing the 777.lnk Shortcut
 
 I navigated to:
 
@@ -326,17 +326,17 @@ Data Triage
     └── Recent
 ```
 
-I selected `777.lnk` and reviewed it in Text View. The shortcut contained the original path to `777.jpg`, connecting the suspicious spreadsheet to recent user activity.
+I selected `777.lnk` and reviewed it in Text View. The shortcut contained a path associated with `777.jpg`, supporting that the disguised spreadsheet had been opened or referenced from the suspect's user environment.
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/5f35dcc6-129f-4ee7-937d-ae84510bc845"
-       alt="Paraben's E3 forensic evidence analysis"
+       alt="Paraben E3 showing the 777.lnk shortcut and its associated file path"
        width="800">
 </p>
 
-<p align="center"><em>Figure 13: `777.lnk` showing the system path associated with the suspicious file.</em></p>
+<p align="center"><em>Figure 13: `777.lnk` showing the path associated with the disguised file.</em></p>
 
-### Suspicious Downloaded Applications
+#### Potentially Relevant Downloaded Applications
 
 I reviewed:
 
@@ -345,22 +345,22 @@ Data Triage
 └── Downloads
 ```
 
-The Downloads category contained installation files associated with suspicious applications, including:
+The Downloads category contained installation files for applications that were potentially relevant to the investigation, including:
 
 - Speedify VPN
 - Tor Browser
 
-The presence of anonymizing software was relevant because such tools can be used to conceal network identity and browsing activity.
+The presence of VPN and anonymity-related software was relevant in context because these tools can alter network routing or reduce the visibility of browsing activity. Their presence alone did not prove misconduct.
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/7cf04909-a793-4418-a6d8-5686e618304e"
-       alt="Paraben's E3 forensic evidence analysis"
+       alt="Paraben E3 showing Speedify VPN and Tor Browser installers in the Downloads category"
        width="800">
 </p>
 
-<p align="center"><em>Figure 14: Installation files for suspicious anonymizing applications found in Downloads.</em></p>
+<p align="center"><em>Figure 14: Speedify VPN and Tor Browser installation files found in the Downloads category.</em></p>
 
-### Installed Speedify VPN Application
+#### Installed Speedify VPN Application
 
 I navigated to:
 
@@ -373,42 +373,41 @@ Data Triage
                 └── Uninstall
 ```
 
-The Uninstall results confirmed that Speedify VPN had not only been downloaded but installed on the suspect's computer.
+The Uninstall Registry results supported that Speedify VPN had been installed on the suspect's computer, rather than merely downloaded.
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/5c3d0bc8-4b00-4fcd-bb7c-479165e0af97"
-       alt="Paraben's E3 forensic evidence analysis"
+       alt="Paraben E3 Registry analysis showing the Speedify VPN uninstall entry"
        width="800">
 </p>
 
 <p align="center"><em>Figure 15: Speedify VPN installation evidence found in the Windows Registry.</em></p>
 
-### User Accounts
+#### User Accounts
 
 I opened the **Users Info** category to identify accounts found in the drive image.
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/99bed914-bed2-4e77-a10b-594c72130529"
-       alt="Paraben's E3 forensic evidence analysis"
+       alt="Paraben E3 showing Windows user accounts identified in the Beverly Gates evidence image"
        width="800">
 </p>
 
 <p align="center"><em>Figure 16: Windows user accounts identified in the Beverly Gates evidence image.</em></p>
 
-### Beverly Gates Startup Entries
+#### Beverly Gates Startup Entries
 
-I opened the Beverly Gates user record and reviewed the `Run` folder. This folder contained applications configured to start automatically when the user logged on.
+I opened the Beverly Gates user record and reviewed the parsed `Run` Registry entries. These entries identified applications configured to start automatically when the user logged on.
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/6ed2a0fc-2d83-4b7a-9ef0-2147248a4ddc"
-       alt="Paraben's E3 forensic evidence analysis"
+       alt="Paraben E3 showing startup applications in the Beverly Gates Run Registry entries"
        width="800">
 </p>
 
+<p align="center"><em>Figure 17: Startup applications identified in the Beverly Gates `Run` Registry entries.</em></p>
 
-<p align="center"><em>Figure 17: Startup applications found in the Beverly Gates `Run` Registry folder.</em></p>
-
-### Suspicious Browser History
+#### Investigatively Relevant Browser History
 
 I reviewed:
 
@@ -419,34 +418,33 @@ Data Triage
         └── History
 ```
 
-The History records contained suspicious browsing activity relevant to the investigation.
+The History records contained browsing activity that was potentially relevant to the investigation. The records were interpreted together with the case context rather than treated as proof of misconduct by themselves.
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/fb72bca1-04ac-4f7a-9ef2-6984297b76d9"
-       alt="Paraben's E3 forensic evidence analysis"
+       alt="Paraben E3 showing browser history records potentially relevant to the investigation"
        width="800">
 </p>
 
-<p align="center"><em>Figure 18: Suspicious browser activity identified in the History records.</em></p>
+<p align="center"><em>Figure 18: Investigatively relevant browser activity identified in the History records.</em></p>
 
-### Suspicious Search Keywords
+#### Investigatively Relevant Search Keywords
 
-I reviewed the **Keywords** sub-node and identified search terms associated with the suspected activity.
+I reviewed the **Keywords** sub-node and identified search terms that were potentially associated with the suspected activity.
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/f2f1e60d-ea1d-4b82-b270-279aa1305687"
-       alt="Paraben's E3 forensic evidence analysis"
+       alt="Paraben E3 showing an investigatively relevant browser search keyword"
        width="800">
 </p>
 
-<p align="center"><em>Figure 19: Suspicious search keyword recovered from browser artifacts.</em></p>
-
+<p align="center"><em>Figure 19: Investigatively relevant search keyword recovered from browser artifacts.</em></p>
 
 ---
 
-# Section 3: Challenge and Analysis
+## Section 3: Challenge and Analysis
 
-## Part 1: Use Advanced Search to Locate Additional Evidence
+### Part 1: Use Advanced Search to Locate Additional Evidence
 
 I used E3 Advanced Search on:
 
@@ -462,19 +460,19 @@ Drug Search Term List1.txt
 
 I enabled the **Whole word** option and searched for terms commonly associated with drug-trafficking investigations.
 
-The search identified a suspicious file containing addresses relevant to the investigation.
+The search identified a file containing addresses that were potentially relevant to the investigation.
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/f9832c15-09d2-4f85-ba00-4737b09fcaec"
-       alt="Paraben's E3 forensic evidence analysis"
+       alt="Paraben E3 Advanced Search showing a file containing potentially relevant addresses"
        width="800">
 </p>
 
-<p align="center"><em>Figure 20: Suspicious file containing addresses located with E3 Advanced Search.</em></p>
+<p align="center"><em>Figure 20: File containing potentially relevant addresses located with E3 Advanced Search.</em></p>
 
 ---
 
-## Part 2: Identify Suspicious Browser Activity
+### Part 2: Identify Potentially Relevant Browser Activity
 
 I returned to the parsed Registry artifacts and navigated to:
 
@@ -494,34 +492,34 @@ I ran an Advanced Search for the whole word:
 Tor
 ```
 
-The results included Registry evidence connecting Tor-related activity with Firefox, indicating that Tor had been used or configured as a Firefox extension.
+The results included Registry artifacts containing both Tor- and Firefox-related references. Because Tor Browser is based on Firefox, these findings were consistent with Tor Browser components or configuration, but the Registry result alone did not establish that Tor operated as a Firefox extension.
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/a4f6d882-2754-40ea-b1fb-f7d9cdabfb02"
-       alt="Paraben's E3 forensic evidence analysis"
+       alt="Paraben E3 Registry search showing related Tor and Firefox references"
        width="800">
 </p>
 
-<p align="center"><em>Figure 21: Registry evidence associating Tor-related activity with Firefox.</em></p>
+<p align="center"><em>Figure 21: Registry artifacts containing related Tor and Firefox references.</em></p>
 
 ---
 
-# Key Findings
+## Key Findings
 
 - Task Manager and Resource Monitor provided live evidence of running processes and active listening ports.
 - `fsutil` exposed NTFS volume details, USN journal information, and file-path data based on NTFS file IDs.
 - The Windows Registry contained installation, network, login, folder-access, and recent-document artifacts.
 - E3 detected a file-extension mismatch involving `777.jpg`.
 - The disguised file was an Excel spreadsheet containing customer, payment, and drug-related information.
-- The `777.lnk` shortcut connected the spreadsheet to a path on the suspect's computer and supported evidence of recent access.
-- Tor Browser and Speedify VPN installation files were present in the Downloads category.
+- The `777.lnk` shortcut connected the spreadsheet to a path in the suspect's user environment and supported that the file had been opened or referenced.
+- Tor Browser and Speedify VPN installation files were present in the Downloads category, although their presence alone did not prove improper use.
 - Registry artifacts confirmed that Speedify VPN had been installed.
 - The Beverly Gates user profile contained startup entries and relevant application artifacts.
-- Browser History and Keywords records contained suspicious browsing evidence.
-- Advanced Search located an additional file containing suspicious addresses.
-- Registry search results connected Tor-related activity with Firefox.
+- Browser History and Keywords records contained activity that was potentially relevant when interpreted with the case context.
+- Advanced Search located an additional file containing addresses that were potentially relevant to the investigation.
+- Registry search results contained related Tor and Firefox references consistent with Tor Browser components or configuration.
 
-# Artifact Summary
+## Artifact Summary
 
 | Artifact | Tool or Location | Forensic Value |
 |---|---|---|
@@ -532,23 +530,23 @@ The results included Registry evidence connecting Tor-related activity with Fire
 | InstallDate | Windows Registry | Established the Windows installation timestamp |
 | Interface Registry key | Windows Registry | Documented IP and gateway configuration |
 | Winlogon | Windows Registry | Showed system login and shell configuration |
-| ShellBags | Windows Registry | Documented folders accessed by the user |
+| ShellBags | Windows Registry | Indicated folder-view activity associated with the user |
 | RecentDocs | Windows Registry | Identified recently accessed files |
-| `777.jpg` | Paraben E3 | Revealed a concealed incriminating spreadsheet |
-| `777.lnk` | Paraben E3 | Connected the file to a system path and recent access |
-| Speedify and Tor installers | E3 Downloads | Showed acquisition of anonymizing tools |
+| `777.jpg` | Paraben E3 | Revealed a disguised Excel workbook containing investigatively relevant data |
+| `777.lnk` | Paraben E3 | Connected the file to a user-environment path and supported that it had been opened or referenced |
+| Speedify and Tor installers | E3 Downloads | Showed that VPN and anonymity-related installation files were downloaded |
 | Speedify Uninstall key | E3 Registry analysis | Confirmed installation of the VPN application |
-| Browser History and Keywords | E3 browser analysis | Identified suspicious browsing and searches |
-| Custom word-list result | E3 Advanced Search | Located additional suspicious address evidence |
-| Tor/Firefox Registry evidence | E3 Registry analysis | Connected Tor-related activity to Firefox |
+| Browser History and Keywords | E3 browser analysis | Identified browsing and search activity requiring case-context interpretation |
+| Custom word-list result | E3 Advanced Search | Located additional address evidence potentially relevant to the case |
+| Tor/Firefox Registry evidence | E3 Registry analysis | Identified related Tor and Firefox references consistent with Tor Browser components |
 
-# Conclusion
+## Conclusion
 
 This lab demonstrated how Windows forensic investigations combine live system analysis with offline drive-image examination.
 
-Live analysis provided volatile and system-level information about running processes, network activity, NTFS structures, and Registry configuration. Examination of the Beverly Gates drive image then revealed a disguised spreadsheet, shortcut-file evidence, anonymizing applications, startup entries, browser artifacts, suspicious addresses, and Tor-related Registry activity.
+Live analysis provided volatile information about running processes and network activity, along with current system-level information about NTFS structures and Registry configuration. Examination of the Beverly Gates drive image then revealed a disguised spreadsheet, shortcut-file evidence, VPN and anonymity-related applications, startup entries, browser artifacts, potentially relevant addresses, and Tor-related Registry activity.
 
-The lab reinforced the importance of correlating multiple Windows artifacts rather than relying on a single file or record. Together, the file system, Registry, shortcut, application, and browser evidence created a stronger and more complete account of the suspect's activity.
+The lab reinforced the importance of correlating multiple Windows artifacts rather than relying on a single file or record. Together, the file-system, Registry, shortcut, application, and browser artifacts provided a stronger and more complete account of activity associated with the suspect's system. Because live examination can change system state, the commands, collection times, and examiner actions should also be documented.
 
 ---
 
